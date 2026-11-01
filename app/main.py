@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware 
 from pydantic import BaseModel
 import joblib
 import os
@@ -8,6 +9,15 @@ app = FastAPI(
     title="ML Cybersecurity URL Detector API",
     description="API para la detección de URLs maliciosas mediante Machine Learning",
     version="1.0.0"
+)
+
+# Configurar CORS para permitir peticiones desde el Frontend local
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # En producción se restringe, para desarrollo local permitimos todo
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Cargar el modelo entrenado
@@ -34,7 +44,6 @@ def predict_url(payload: URLRequest):
         raise HTTPException(status_code=400, detail="La URL proporcionada está vacía.")
     
     try:
-        # Extraer características y predecir
         features = extract_features(url)
         prediction = int(model.predict(features)[0])
         probability = float(model.predict_proba(features)[0].max())
